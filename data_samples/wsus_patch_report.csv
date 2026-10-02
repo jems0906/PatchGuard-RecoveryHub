@@ -1,0 +1,6 @@
+title,kb_number,classification,approval_status,target_group,asset_hostname,installation_status,wave,deployment_date
+Windows Server Security Update,KB5061234,Security,approved,Production Servers,DC01,installed,Wave 1,2026-09-25
+Cumulative Update for Windows Server,KB5061200,Critical,approved,Production Servers,APP01,reboot required,Wave 1,2026-09-26
+.NET Framework Security Update,KB5061010,Security,approved,Production Servers,SQL01,failed,Wave 2,2026-09-27
+Windows Defender Definition Update,KB2267602,Update Rollup,approved,All Servers,FILE01,installed,Wave 1,2026-09-28
+Windows Server Security Update,KB5061234,Security,approved,Production Servers,WEB01,needed,Wave 2,2026-10-04

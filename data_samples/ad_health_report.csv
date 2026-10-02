@@ -1,0 +1,5 @@
+issue_type,username,object_name,domain_controller,dc_status,last_sync,failed_partner,status,last_logon,lockout_time,last_modified,source,details
+Replication,,,DC01,online,2026-10-02T08:30,DC02,open,,,,DC02,Last replication attempt returned a transient RPC error.
+Locked Account,j.smith,,DC01,online,,,open,,2026-10-02T10:45,,APP01,Repeated failed sign-in attempts.
+Stale Computer,,LAPTOP-OLD23,,, , ,open,2026-05-29,,,,No interactive logon in more than 90 days.
+Password Expiry,svc_reports,,,,, ,open,,,2026-07-14,,Service account password age exceeds policy warning threshold.

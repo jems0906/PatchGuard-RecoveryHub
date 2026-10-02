@@ -1,0 +1,6 @@
+hostname,os_version,role,ip_address,domain,forest,site,fsmo_roles,last_boot,asset_type,app_name,service_status,backup_policy
+DC01,Windows Server 2022,Domain Controller,10.20.0.10,corp.example,corp.example,HQ,PDC Emulator; RID Master,2026-09-28,Domain Controller,,,Gold
+APP01,Windows Server 2022,Application Server,10.20.1.20,corp.example,corp.example,HQ,,2026-09-17,Application,Claims API,Running,Gold
+SQL01,Windows Server 2019,Database Server,10.20.1.30,corp.example,corp.example,DC-East,,2026-08-30,Server,,,Silver
+FILE01,Windows Server 2022,File Server,10.20.2.15,corp.example,corp.example,DC-East,,2026-09-20,Server,,,Silver
+WEB01,Windows Server 2022,Web Server,10.20.1.40,corp.example,corp.example,HQ,,2026-09-05,Server,,,Bronze

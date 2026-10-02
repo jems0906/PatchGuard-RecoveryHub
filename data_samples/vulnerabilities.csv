@@ -1,0 +1,5 @@
+cve_id,severity,affected_asset,description,remediation,patch_available,kb_number,registry_change_needed,registry_key,registry_value,status,deadline,verified_by,verified_at
+CVE-2099-12345,critical,APP01,Synthetic remote code execution finding for demonstration.,Install the lab security update and verify service health.,true,KB5061234,false,,,scheduled,2026-10-04,,
+CVE-2099-23456,high,SQL01,Synthetic privilege escalation finding for demonstration.,Apply the lab security update during the next maintenance window.,true,KB5061010,false,,,open,2026-09-29,,
+CVE-2099-98765,medium,WEB01,Synthetic configuration finding for demonstration.,Disable legacy protocol using the approved server baseline.,false,,true,HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders,Enabled,in progress,2026-10-16,,
+CVE-2099-76543,low,FILE01,Synthetic informational finding for demonstration.,Update package during routine maintenance.,false,,false,,,verified,,Alex Morgan,2026-10-02

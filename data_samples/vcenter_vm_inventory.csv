@@ -1,0 +1,4 @@
+vm_name,power_state,host_cluster,datastore,vcpus,cpu_ready_percent,memory_allocated_gb,memory_active_gb,ballooning,disk_provisioned_gb,disk_used_gb,datastore_free_percent,tools_status,snapshot_name,snapshot_size_gb,snapshot_created
+APP01,poweredOn,Prod-Cluster-A,DS-Prod-01,4,2.1,16,11.2,false,180,122,32,current,pre-sept-patch,18,2026-09-21
+SQL01,poweredOn,Prod-Cluster-A,DS-Prod-02,8,7.4,32,28,true,800,610,12,outdated,sql-before-upgrade,94,2026-08-25
+WEB01,poweredOn,Prod-Cluster-B,DS-Web-01,2,1.2,8,4.7,false,120,66,48,current,,, 
