@@ -1,4 +1,4 @@
-import { defineRailway, github, postgres, project, service } from "railway/iac";
+import { defineRailway, github, postgres, project, ref, service } from "railway/iac";
 
 const repository = "jems0906/PatchGuard-RecoveryHub";
 const branch = process.env.GITHUB_BRANCH || "main";
@@ -23,7 +23,7 @@ export default defineRailway(() => {
     source: sourceFor("frontend"),
     healthcheck: "/",
     env: {
-      BACKEND_ORIGIN: `http://${backend.env.RAILWAY_PRIVATE_DOMAIN}:8000`,
+      BACKEND_ORIGIN: ref(backend, "RAILWAY_PRIVATE_DOMAIN"),
     },
   });
 
