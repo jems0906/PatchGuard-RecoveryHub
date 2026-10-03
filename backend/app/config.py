@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
     seed_demo_data: bool = True
     auth_required: bool = False
+    auth_cookie_secure: bool = False
     auth_admin_password: SecretStr = SecretStr("")
     auth_session_secret: SecretStr = SecretStr("")
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

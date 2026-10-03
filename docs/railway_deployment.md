@@ -15,8 +15,10 @@ The frontend is the only public service. nginx sends `/api/` requests to `backen
 The Railway backend must have these variables set in its service settings:
 
 - `AUTH_REQUIRED=true`
+- `AUTH_COOKIE_SECURE=true`
 - `AUTH_ADMIN_PASSWORD`: a randomly generated password with at least 32 characters.
 - `AUTH_SESSION_SECRET`: an independent, randomly generated secret with at least 32 characters.
+- `CORS_ORIGINS=https://frontend-production-724d2.up.railway.app`
 
 The IaC definition sets `AUTH_REQUIRED=true` and preserves the two secret values without storing them in source control. Set or rotate them using Railway's secret-variable interface or CLI. The app refuses to start with authentication enabled if either secret is shorter than 32 characters. After changing a variable, allow Railway to redeploy the backend.
 

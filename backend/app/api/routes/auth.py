@@ -48,7 +48,7 @@ def login(payload: LoginRequest, request: Request, response: Response) -> dict[s
         logger.warning("auth.login result=denied")
         raise HTTPException(status_code=401, detail="Invalid password")
 
-    secure_cookie = (
+    secure_cookie = settings.auth_cookie_secure or (
         request.url.scheme == "https"
         or request.headers.get("x-forwarded-proto", "").split(",", 1)[0].strip() == "https"
     )
@@ -72,7 +72,8 @@ def logout(request: Request, response: Response) -> dict[str, bool]:
     response.delete_cookie(
         key=SESSION_COOKIE,
         httponly=True,
-        secure=(
+        secure=settings.auth_cookie_secure
+        or (
             request.url.scheme == "https"
             or request.headers.get("x-forwarded-proto", "").split(",", 1)[0].strip()
             == "https"

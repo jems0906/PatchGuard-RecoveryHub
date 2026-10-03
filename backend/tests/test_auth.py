@@ -77,6 +77,23 @@ def test_login_marks_proxy_https_cookie_secure(client, monkeypatch):
     assert "secure" in response.headers["set-cookie"].lower()
 
 
+def test_live_frontend_origin_is_allowed_when_proxy_uses_internal_http(client, monkeypatch):
+    enable_auth(monkeypatch)
+    monkeypatch.setattr(settings, "auth_cookie_secure", True)
+    monkeypatch.setattr(
+        settings,
+        "cors_origins",
+        "https://frontend-production-724d2.up.railway.app",
+    )
+    response = client.post(
+        "/api/auth/login",
+        json={"password": "a" * 40},
+        headers={"Origin": "https://frontend-production-724d2.up.railway.app"},
+    )
+    assert response.status_code == 200
+    assert "secure" in response.headers["set-cookie"].lower()
+
+
 def test_authenticated_mutations_require_same_origin(client, monkeypatch):
     enable_auth(monkeypatch)
     client.post(
