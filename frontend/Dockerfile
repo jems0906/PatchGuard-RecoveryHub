@@ -10,4 +10,4 @@ COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 8080
 ENV PORT=8080
-ENV BACKEND_ORIGIN=http://backend:8000
+ENV BACKEND_ORIGIN=backend.railway.internal

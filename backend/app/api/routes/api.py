@@ -1,9 +1,10 @@
 from fastapi import APIRouter
 
-from app.api.routes import active_directory, assets, backups, compliance, health, imports, patches, vulnerabilities, virtualization
+from app.api.routes import active_directory, assets, auth, backups, compliance, health, imports, patches, vulnerabilities, virtualization
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(health.router)
+api_router.include_router(auth.router)
 api_router.include_router(assets.router)
 api_router.include_router(patches.router)
 api_router.include_router(vulnerabilities.router)

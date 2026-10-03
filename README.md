@@ -9,6 +9,7 @@ An infrastructure compliance dashboard for Windows server patch status, vulnerab
 - Weighted compliance overview, 30-day trend, patch compliance, overdue vulnerability and high-risk system indicators.
 - Server and VM inventory, WSUS-style deployment statuses, vulnerability lifecycle tracking, AD health findings, backup/SLA summaries, VM health alerts.
 - CSV/JSON import for assets, patches, vulnerabilities, AD issues, VMs, and backups.
+- Optional single-admin password login with signed, HttpOnly 12-hour sessions; enabled for the Railway deployment.
 - Sample reports in [`data_samples/`](./data_samples), read-only optional PowerShell collectors in [`scripts/powershell/`](./scripts/powershell), and operational runbooks in [`docs/`](./docs).
 - FastAPI OpenAPI docs at `/docs`, pytest API/report tests, Dockerfiles, GitHub Actions, and Railway configuration.
 
@@ -67,7 +68,9 @@ npm run build
 
 Build the backend from `backend/` and the frontend from `frontend/`; the frontend nginx container serves the single-page app and proxies `/api` requests. Set `BACKEND_ORIGIN` in the frontend service to the backend's reachable URL (including `http://` or `https://`).
 
-For Railway, follow the step-by-step [deployment preparation guide](./docs/railway_deployment.md). The checked-in [`.railway/railway.ts`](./.railway/railway.ts) defines the Railway-managed PostgreSQL database plus backend and frontend services. The repository slug and target Railway project/environment must be supplied/reviewed before running `railway config plan` and `railway config apply`. A public frontend domain is generated in the Railway dashboard after provisioning. Do not expose sensitive inventory data until authentication, authorization, audit logging, and access controls have been added.
+The Railway deployment is live at [frontend-production-724d2.up.railway.app](https://frontend-production-724d2.up.railway.app). The checked-in [`.railway/railway.ts`](./.railway/railway.ts) defines the Railway-managed PostgreSQL database plus backend and frontend services. The frontend requires the administrator password configured as the Railway `AUTH_ADMIN_PASSWORD` secret. Keep `AUTH_REQUIRED=true` and configure a separate random `AUTH_SESSION_SECRET` of at least 32 characters; neither secret belongs in source control. See the [deployment and access-control guide](./docs/railway_deployment.md) before changing the live environment.
+
+This is a single shared administrator account, not a multi-user identity system. It does not provide per-user roles or a durable record of all data changes. The database currently contains synthetic demo data. Do not import real infrastructure records until your organization has reviewed identity, audit, backup, retention, and network-access requirements.
 
 ## Operational guides
 
@@ -81,7 +84,7 @@ For Railway, follow the step-by-step [deployment preparation guide](./docs/railw
 
 ## API outline
 
-`GET /api/health`, `/api/compliance/overview`, `/api/compliance/trend`, `/api/assets`, `/api/patches`, `/api/patches/compliance`, `/api/vulnerabilities`, `/api/ad/health`, `/api/ad/issues`, `/api/ad/actions`, `/api/vms`, `/api/vms/alerts`, `/api/backups`, `/api/backups/sla`, `/api/backups/readiness`. Create assets, patches, vulnerabilities, and AD action audit records with `POST`; update remediation status via `PATCH /api/vulnerabilities/{id}`; upload reports via `POST /api/imports?entity=<entity>`.
+`GET /api/health` is public for health checks. `/api/auth/session` reports login state; `POST /api/auth/login` and `POST /api/auth/logout` manage the administrator session. All other API routes and API documentation require an authenticated session when `AUTH_REQUIRED=true`. This includes `/api/compliance/overview`, `/api/compliance/trend`, `/api/assets`, `/api/patches`, `/api/patches/compliance`, `/api/vulnerabilities`, `/api/ad/health`, `/api/ad/issues`, `/api/ad/actions`, `/api/vms`, `/api/vms/alerts`, `/api/backups`, `/api/backups/sla`, and `/api/backups/readiness`. Create assets, patches, vulnerabilities, and AD action records with `POST`; update vulnerability status via `PATCH /api/vulnerabilities/{id}`; upload reports via `POST /api/imports?entity=<entity>`.
 
 ## Scoring notes
 

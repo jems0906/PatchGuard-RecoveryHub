@@ -4,6 +4,7 @@ import AssetInventory from "./components/AssetInventory.jsx";
 import ADActionLog from "./components/ADActionLog.jsx";
 import DataImporter from "./components/DataImporter.jsx";
 import Home from "./components/Home.jsx";
+import Login from "./components/Login.jsx";
 import PatchComplianceDashboard from "./components/PatchComplianceDashboard.jsx";
 import RecordsTable from "./components/RecordsTable.jsx";
 import VulnerabilityTracker from "./components/VulnerabilityTracker.jsx";
@@ -25,8 +26,22 @@ export default function App() {
   const [active, setActive] = useState("overview");
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(true);
+  const [authStatus, setAuthStatus] = useState("checking");
   const [error, setError] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.session().then(({ authenticated }) => {
+      if (!cancelled) setAuthStatus(authenticated ? "authenticated" : "login");
+    }).catch((sessionError) => {
+      if (!cancelled) {
+        setError(sessionError.message);
+        setAuthStatus("unavailable");
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,13 +52,26 @@ export default function App() {
       ]);
       setData({ overview, trend, assets, patches, vulnerabilities, ad, adActions, vms, vmAlerts, backups, recoveryReadiness });
     } catch (loadError) {
-      setError(loadError.message);
+      if (loadError.status === 401) setAuthStatus("login");
+      else setError(loadError.message);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { load(); }, [load, refreshKey]);
+  useEffect(() => {
+    if (authStatus === "authenticated") load();
+  }, [authStatus, load, refreshKey]);
+
+  async function signOut() {
+    try {
+      await api.logout();
+      setData(initialData);
+      setAuthStatus("login");
+    } catch (logoutError) {
+      setError(logoutError.message);
+    }
+  }
 
   async function verifyVulnerability(id) {
     try {
@@ -55,6 +83,16 @@ export default function App() {
   }
 
   const title = navigation.find(([key]) => key === active)?.[1] || "Overview";
+
+  if (authStatus === "checking") {
+    return <main className="login-page"><div className="loading-state"><span className="spinner" /> Checking access…</div></main>;
+  }
+  if (authStatus === "login") {
+    return <Login onAuthenticated={() => { setError(""); setAuthStatus("authenticated"); }} />;
+  }
+  if (authStatus === "unavailable") {
+    return <main className="login-page"><section className="login-card"><h1>Workspace unavailable</h1><p className="login-description">{error}</p><button className="button button-primary login-submit" onClick={() => window.location.reload()}>Try again</button></section></main>;
+  }
 
   return (
     <div className="app-shell">
@@ -71,7 +109,7 @@ export default function App() {
       <main className="main-area">
         <header className="topbar">
           <div className="breadcrumb"><span>RecoveryHub</span><b>/</b><strong>{title}</strong></div>
-          <div className="top-actions"><span className="system-status"><i /> {error ? "Connection issue" : data.overview ? "API connected" : "Connecting"}</span><button className="button button-quiet" onClick={() => setRefreshKey((key) => key + 1)}>↻ <span>Refresh</span></button><span className="avatar">OP</span></div>
+          <div className="top-actions"><span className="system-status"><i /> {error ? "Connection issue" : data.overview ? "API connected" : "Connecting"}</span><button className="button button-quiet" onClick={() => setRefreshKey((key) => key + 1)}>↻ <span>Refresh</span></button><button className="button button-quiet" onClick={signOut}>Sign out</button><span className="avatar">OP</span></div>
         </header>
         <div className="page-content">
           {error && <div className="error-banner" role="alert"><b>Unable to load project data:</b> {error} <button onClick={() => setRefreshKey((key) => key + 1)}>Retry</button></div>}

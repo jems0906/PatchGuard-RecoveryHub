@@ -1,4 +1,4 @@
-import { defineRailway, github, postgres, project, ref, service } from "railway/iac";
+import { defineRailway, github, postgres, preserve, project, ref, service } from "railway/iac";
 
 const repository = "jems0906/PatchGuard-RecoveryHub";
 const branch = process.env.GITHUB_BRANCH || "main";
@@ -17,6 +17,9 @@ export default defineRailway(() => {
       DATABASE_URL: database.env.DATABASE_URL,
       PORT: "8000",
       SEED_DEMO_DATA: "true",
+      AUTH_REQUIRED: "true",
+      AUTH_ADMIN_PASSWORD: preserve(),
+      AUTH_SESSION_SECRET: preserve(),
     },
   });
   const frontend = service("frontend", {

@@ -1,7 +1,10 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE}/api${path}`, options);
+  const response = await fetch(`${API_BASE}/api${path}`, {
+    credentials: "same-origin",
+    ...options,
+  });
   if (!response.ok) {
     let message = `Request failed (${response.status})`;
     try {
@@ -10,12 +13,21 @@ async function request(path, options = {}) {
     } catch {
       // Keep the HTTP status message when the server did not return JSON.
     }
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
   }
   return response.json();
 }
 
 export const api = {
+  session: () => request("/auth/session"),
+  login: (password) => request("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  }),
+  logout: () => request("/auth/logout", { method: "POST" }),
   health: () => request("/health"),
   overview: () => request("/compliance/overview"),
   trend: () => request("/compliance/trend"),
