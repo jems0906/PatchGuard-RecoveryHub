@@ -16,11 +16,12 @@ The Railway backend must have these variables set in its service settings:
 
 - `AUTH_REQUIRED=true`
 - `AUTH_COOKIE_SECURE=true`
+- `AUTH_ADMIN_USERNAME`: the administrator username (currently `admin`).
 - `AUTH_ADMIN_PASSWORD`: a randomly generated password with at least 32 characters.
 - `AUTH_SESSION_SECRET`: an independent, randomly generated secret with at least 32 characters.
 - `CORS_ORIGINS=https://frontend-production-724d2.up.railway.app`
 
-The IaC definition sets `AUTH_REQUIRED=true` and preserves the two secret values without storing them in source control. Set or rotate them using Railway's secret-variable interface or CLI. The app refuses to start with authentication enabled if either secret is shorter than 32 characters. After changing a variable, allow Railway to redeploy the backend.
+The IaC definition enables authentication and preserves the configured username and secret values without storing credentials in source control. Set or rotate them using Railway's secret-variable interface or CLI. The app refuses to start with authentication enabled if the username is blank or either secret is shorter than 32 characters. After changing a variable, allow Railway to redeploy the backend.
 
 The sign-in endpoint is `POST /api/auth/login`. It sets a signed, HttpOnly, SameSite=Strict cookie; HTTPS requests receive a Secure cookie. Sessions expire after 12 hours. `POST /api/auth/logout` clears the session. Health checks remain available at `/api/health`; `/api/auth/session` reports whether a browser has a valid session. Other API endpoints and API docs require a session. Mutating requests must include an allowed same-origin Origin header.
 

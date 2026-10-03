@@ -9,7 +9,7 @@ An infrastructure compliance dashboard for Windows server patch status, vulnerab
 - Weighted compliance overview, 30-day trend, patch compliance, overdue vulnerability and high-risk system indicators.
 - Server and VM inventory, WSUS-style deployment statuses, vulnerability lifecycle tracking, AD health findings, backup/SLA summaries, VM health alerts.
 - CSV/JSON import for assets, patches, vulnerabilities, AD issues, VMs, and backups.
-- Optional single-admin password login with signed, HttpOnly 12-hour sessions; enabled for the Railway deployment.
+- Optional single-admin username/password login with signed, HttpOnly 12-hour sessions; enabled for the Railway deployment.
 - Sample reports in [`data_samples/`](./data_samples), read-only optional PowerShell collectors in [`scripts/powershell/`](./scripts/powershell), and operational runbooks in [`docs/`](./docs).
 - FastAPI OpenAPI docs at `/docs`, pytest API/report tests, Dockerfiles, GitHub Actions, and Railway configuration.
 
@@ -68,7 +68,7 @@ npm run build
 
 Build the backend from `backend/` and the frontend from `frontend/`; the frontend nginx container serves the single-page app and proxies `/api` requests. Set `BACKEND_ORIGIN` in the frontend service to the backend's reachable URL (including `http://` or `https://`).
 
-The Railway deployment is live at [frontend-production-724d2.up.railway.app](https://frontend-production-724d2.up.railway.app). The checked-in [`.railway/railway.ts`](./.railway/railway.ts) defines the Railway-managed PostgreSQL database plus backend and frontend services. The frontend requires the administrator password configured as the Railway `AUTH_ADMIN_PASSWORD` secret. Keep `AUTH_REQUIRED=true` and configure a separate random `AUTH_SESSION_SECRET` of at least 32 characters; neither secret belongs in source control. See the [deployment and access-control guide](./docs/railway_deployment.md) before changing the live environment.
+The Railway deployment is live at [frontend-production-724d2.up.railway.app](https://frontend-production-724d2.up.railway.app). The checked-in [`.railway/railway.ts`](./.railway/railway.ts) defines the Railway-managed PostgreSQL database plus backend and frontend services. The frontend requires the administrator username and password configured in Railway. Keep `AUTH_REQUIRED=true`, use a separate random `AUTH_SESSION_SECRET` of at least 32 characters, and never store credentials in source control. See the [deployment and access-control guide](./docs/railway_deployment.md) before changing the live environment.
 
 This is a single shared administrator account, not a multi-user identity system. It does not provide per-user roles or a durable record of all data changes. The database currently contains synthetic demo data. Do not import real infrastructure records until your organization has reviewed identity, audit, backup, retention, and network-access requirements.
 

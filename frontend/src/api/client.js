@@ -22,10 +22,10 @@ async function request(path, options = {}) {
 
 export const api = {
   session: () => request("/auth/session"),
-  login: (password) => request("/auth/login", {
+  login: (username, password) => request("/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ username, password }),
   }),
   logout: () => request("/auth/logout", { method: "POST" }),
   health: () => request("/health"),

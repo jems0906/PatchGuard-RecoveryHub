@@ -19,6 +19,7 @@ router = APIRouter(prefix="/auth")
 
 
 class LoginRequest(BaseModel):
+    username: Annotated[str, StringConstraints(min_length=1, max_length=64)]
     password: Annotated[SecretStr, StringConstraints(max_length=1024)]
 
 
@@ -39,12 +40,18 @@ def login(payload: LoginRequest, request: Request, response: Response) -> dict[s
     if not valid_request_origin(request):
         raise HTTPException(status_code=403, detail="Request origin is not allowed")
 
+    expected_username = settings.auth_admin_username
+    supplied_username = payload.username
     expected_password = settings.auth_admin_password.get_secret_value()
     supplied_password = payload.password.get_secret_value()
-    if not hmac.compare_digest(
-        supplied_password.encode("utf-8"),
-        expected_password.encode("utf-8"),
-    ):
+    valid_username = hmac.compare_digest(
+        supplied_username.encode("utf-8"),
+        expected_username.encode("utf-8"),
+    )
+    valid_password = hmac.compare_digest(
+        supplied_password.encode("utf-8"), expected_password.encode("utf-8")
+    )
+    if not valid_username or not valid_password:
         logger.warning("auth.login result=denied")
         raise HTTPException(status_code=401, detail="Invalid password")
 

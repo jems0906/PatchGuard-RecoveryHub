@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api } from "../api/client.js";
 
 export default function Login({ onAuthenticated }) {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -11,7 +12,7 @@ export default function Login({ onAuthenticated }) {
     setError("");
     setSubmitting(true);
     try {
-      await api.login(password);
+      await api.login(username, password);
       onAuthenticated();
     } catch (loginError) {
       setError(loginError.message);
@@ -27,11 +28,21 @@ export default function Login({ onAuthenticated }) {
         <div className="brand-mark login-mark">P</div>
         <p className="eyebrow">PATCHGUARD RECOVERYHUB</p>
         <h1>Admin sign in</h1>
-        <p className="login-description">Enter the administrator password to access this workspace.</p>
+        <p className="login-description">Enter your administrator username and password to access this workspace.</p>
+        <label className="login-label" htmlFor="admin-username">Username</label>
+        <input
+          autoComplete="username"
+          autoFocus
+          id="admin-username"
+          maxLength={64}
+          onChange={(event) => setUsername(event.target.value)}
+          required
+          type="text"
+          value={username}
+        />
         <label className="login-label" htmlFor="admin-password">Administrator password</label>
         <input
           autoComplete="current-password"
-          autoFocus
           id="admin-password"
           maxLength={1024}
           onChange={(event) => setPassword(event.target.value)}

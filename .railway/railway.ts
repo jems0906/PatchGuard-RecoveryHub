@@ -19,6 +19,7 @@ export default defineRailway(() => {
       SEED_DEMO_DATA: "true",
       AUTH_REQUIRED: "true",
       AUTH_COOKIE_SECURE: "true",
+      AUTH_ADMIN_USERNAME: preserve(),
       AUTH_ADMIN_PASSWORD: preserve(),
       AUTH_SESSION_SECRET: preserve(),
       CORS_ORIGINS: "https://frontend-production-724d2.up.railway.app",

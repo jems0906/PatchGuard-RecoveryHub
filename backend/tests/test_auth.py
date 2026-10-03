@@ -6,6 +6,7 @@ from app.config import settings
 
 def enable_auth(monkeypatch):
     monkeypatch.setattr(settings, "auth_required", True)
+    monkeypatch.setattr(settings, "auth_admin_username", "admin")
     monkeypatch.setattr(settings, "auth_admin_password", SecretStr("a" * 40))
     monkeypatch.setattr(settings, "auth_session_secret", SecretStr("b" * 64))
 
@@ -19,20 +20,20 @@ def test_api_requires_login_and_logout_revokes_cookie(client, monkeypatch):
 
     denied = client.post(
         "/api/auth/login",
-        json={"password": "wrong"},
+        json={"username": "admin", "password": "wrong"},
         headers={"Origin": "http://testserver"},
     )
     assert denied.status_code == 401
     oversized = client.post(
         "/api/auth/login",
-        json={"password": "x" * 1025},
+        json={"username": "admin", "password": "x" * 1025},
         headers={"Origin": "http://testserver"},
     )
     assert oversized.status_code == 422
 
     logged_in = client.post(
         "/api/auth/login",
-        json={"password": "a" * 40},
+        json={"username": "admin", "password": "a" * 40},
         headers={"Origin": "http://testserver"},
     )
     assert logged_in.status_code == 200
@@ -57,7 +58,7 @@ def test_login_rejects_untrusted_origin(client, monkeypatch):
     enable_auth(monkeypatch)
     response = client.post(
         "/api/auth/login",
-        json={"password": "a" * 40},
+        json={"username": "admin", "password": "a" * 40},
         headers={"Origin": "https://attacker.example"},
     )
     assert response.status_code == 403
@@ -67,7 +68,7 @@ def test_login_marks_proxy_https_cookie_secure(client, monkeypatch):
     enable_auth(monkeypatch)
     response = client.post(
         "/api/auth/login",
-        json={"password": "a" * 40},
+        json={"username": "admin", "password": "a" * 40},
         headers={
             "Origin": "https://testserver",
             "X-Forwarded-Proto": "https",
@@ -87,18 +88,35 @@ def test_live_frontend_origin_is_allowed_when_proxy_uses_internal_http(client, m
     )
     response = client.post(
         "/api/auth/login",
-        json={"password": "a" * 40},
+        json={"username": "admin", "password": "a" * 40},
         headers={"Origin": "https://frontend-production-724d2.up.railway.app"},
     )
     assert response.status_code == 200
     assert "secure" in response.headers["set-cookie"].lower()
 
 
+def test_login_requires_matching_username(client, monkeypatch):
+    enable_auth(monkeypatch)
+    wrong_username = client.post(
+        "/api/auth/login",
+        json={"username": "operator", "password": "a" * 40},
+        headers={"Origin": "http://testserver"},
+    )
+    assert wrong_username.status_code == 401
+
+    missing_username = client.post(
+        "/api/auth/login",
+        json={"password": "a" * 40},
+        headers={"Origin": "http://testserver"},
+    )
+    assert missing_username.status_code == 422
+
+
 def test_authenticated_mutations_require_same_origin(client, monkeypatch):
     enable_auth(monkeypatch)
     client.post(
         "/api/auth/login",
-        json={"password": "a" * 40},
+        json={"username": "admin", "password": "a" * 40},
         headers={"Origin": "http://testserver"},
     )
 

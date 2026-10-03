@@ -14,6 +14,10 @@ from app.seed import seed_demo_data
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     if settings.auth_required:
+        if not settings.auth_admin_username.strip():
+            raise RuntimeError(
+                "AUTH_ADMIN_USERNAME must be configured when authentication is enabled"
+            )
         if len(settings.auth_admin_password.get_secret_value()) < 32:
             raise RuntimeError(
                 "AUTH_ADMIN_PASSWORD must contain at least 32 characters when authentication is enabled"
