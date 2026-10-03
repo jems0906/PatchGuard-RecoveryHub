@@ -6,12 +6,12 @@ function Kpi({ label, value, detail, tone = "" }) {
   return <article className="kpi-card"><div className="kpi-top"><span>{label}</span><span className={`kpi-dot ${tone}`} /></div><strong>{value}</strong><p>{detail}</p></article>;
 }
 
-export default function Home({ overview, trend, vmAlerts }) {
+export default function Home({ overview, trend, vmAlerts, onExport }) {
   const latestTrend = useMemo(() => trend, [trend]);
   return (
     <div className="dashboard-grid">
       <section className="welcome">
-        <div><p className="eyebrow">INFRASTRUCTURE POSTURE</p><h1>Operations overview</h1><p>Patch, risk, identity, virtualization, and recovery at a glance.</p></div>
+        <div><p className="eyebrow">INFRASTRUCTURE POSTURE</p><h1>Operations overview</h1><p>Patch, risk, identity, virtualization, and recovery at a glance.</p><button className="button button-primary audit-export" onClick={onExport}>Download audit evidence</button></div>
         <div className={`score-ring ${overview.overall_score < 70 ? "score-warning" : ""}`}><strong>{overview.overall_score}%</strong><span>overall score</span></div>
       </section>
       <div className="kpi-grid">

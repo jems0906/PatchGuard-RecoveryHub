@@ -20,6 +20,7 @@ The Railway backend must have these variables set in its service settings:
 - `AUTH_ADMIN_PASSWORD`: a randomly generated password with at least 32 characters.
 - `AUTH_SESSION_SECRET`: an independent, randomly generated secret with at least 32 characters.
 - `CORS_ORIGINS=https://frontend-production-724d2.up.railway.app`
+- `AD_SERVICE_ACCOUNT_PASSWORD_MAX_AGE_DAYS`: optional organization-defined service-account password-age threshold (defaults to 90).
 
 The IaC definition enables authentication and preserves the configured username and secret values without storing credentials in source control. Set or rotate them using Railway's secret-variable interface or CLI. The app refuses to start with authentication enabled if the username is blank or either secret is shorter than 32 characters. After changing a variable, allow Railway to redeploy the backend.
 
@@ -58,4 +59,4 @@ The health endpoint is intentionally public for Railway's health checks. The das
 
 The database currently contains synthetic demo data. `SEED_DEMO_DATA=true` remains enabled; changing it to `false` stops future seeding but does not remove existing demo rows. Clear or replace demo records only after reviewing a database backup and the intended data-retention policy.
 
-This deployment uses one shared administrator password. It does not provide individual accounts, role-based authorization, durable audit records for each data change, automated retention, or an application-level backup/restore workflow. Authentication outcomes are written to service logs, whose retention depends on Railway. Do not upload real server, identity, vulnerability, or backup inventories until your organization has approved the residual risks and required controls.
+The authenticated `/api/compliance/audit` endpoint and the dashboard's **Download audit evidence** button export current inventory, compliance summary, action-log entries, and available snapshots as JSON. The overview captures at most one score snapshot per day. The export is not an immutable event ledger and does not track every changed field or actor. This deployment uses one shared administrator password; it does not provide individual accounts, role-based authorization, automated data retention, or an application-level backup/restore workflow. Authentication outcomes are written to service logs, whose retention depends on Railway. Do not upload real server, identity, vulnerability, or backup inventories until your organization has approved the residual risks and required controls.

@@ -1,9 +1,10 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.backups.backup_tracker import backup_sla_state
+from app.config import settings
 from app.models import ADIssue, Asset, Backup, ComplianceSnapshot, Patch, VM, Vulnerability
 
 
@@ -24,6 +25,7 @@ def build_compliance_overview(db: Session) -> dict:
     open_vulnerabilities = [v for v in vulnerabilities if v.status.lower() not in {"verified", "remediated"}]
     vulnerability_rate = _percent(len(vulnerabilities) - len(open_vulnerabilities), len(vulnerabilities))
     backup_rate = _percent(sum(backup_sla_state(b) == "on-track" for b in backups), len(backups))
+    ad_summary = ad_hygiene_summary(ad_issues)
     active_ad_issues = [issue for issue in ad_issues if issue.status.lower() not in {"resolved", "healthy"}]
     ad_rate = max(0.0, 100.0 - 10.0 * len(active_ad_issues))
     score = round(patch_rate * 0.35 + vulnerability_rate * 0.30 + backup_rate * 0.25 + ad_rate * 0.10, 1)
@@ -89,7 +91,7 @@ def build_compliance_overview(db: Session) -> dict:
         "patches": patch_status,
         "vulnerabilities_by_severity": by_severity,
         "backups": backup_summary,
-        "active_directory": {"open_issues": len(active_ad_issues), "healthy_percent": ad_rate},
+        "active_directory": {**ad_summary, "healthy_percent": ad_rate},
         "high_risk_systems": high_risk,
     }
 
@@ -101,6 +103,36 @@ def _date(value: str):
         return None
 
 
+def ad_hygiene_summary(issues: list[ADIssue], as_of=None) -> dict:
+    today = as_of or datetime.now(UTC).date()
+    open_issues = [row for row in issues if row.status.lower() not in {"resolved", "healthy"}]
+    expiring_passwords = [
+        row for row in issues
+        if row.status.lower() not in {"resolved", "healthy"}
+        and (expires := _date(row.password_expires_at)) is not None
+        and 0 <= (expires - today).days <= 7
+    ]
+    return {
+        "open_issues": len(open_issues),
+        "replication_errors": sum(row.issue_type.lower() == "replication" for row in open_issues),
+        "locked_accounts": sum(row.issue_type.lower() == "locked account" for row in open_issues),
+        "stale_objects": sum(row.issue_type.lower() in {"stale computer", "stale object"} for row in open_issues),
+        "disabled_accounts": sum(
+            row.status.lower() not in {"resolved", "healthy"}
+            and (not row.account_enabled or "disabled account" in row.issue_type.lower())
+            for row in issues
+        ),
+        "passwords_expiring_within_7_days": len(expiring_passwords),
+        "service_accounts_over_password_age": sum(
+            row.is_service_account
+            and row.status.lower() not in {"resolved", "healthy"}
+            and row.password_age_days > settings.ad_service_account_password_max_age_days
+            for row in issues
+        ),
+        "service_account_password_max_age_days": settings.ad_service_account_password_max_age_days,
+    }
+
+
 def _group_by(rows: list, attribute: str, output_key: str) -> list[dict]:
     grouped: dict[str, int] = {}
     for row in rows:
@@ -110,8 +142,24 @@ def _group_by(rows: list, attribute: str, output_key: str) -> list[dict]:
 
 
 def compliance_trend(db: Session) -> list[dict]:
-    cutoff = datetime.utcnow() - timedelta(days=30)
+    cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=30)
     snapshots = db.scalars(
         select(ComplianceSnapshot).where(ComplianceSnapshot.captured_at >= cutoff).order_by(ComplianceSnapshot.captured_at)
     )
     return [{"date": row.captured_at.date().isoformat(), "score": row.score} for row in snapshots]
+
+
+def capture_daily_compliance_snapshot(db: Session, score: float, captured_at: datetime | None = None) -> None:
+    captured_at = captured_at or datetime.now(UTC).replace(tzinfo=None)
+    captured_at = captured_at.replace(tzinfo=None)
+    day_start = datetime.combine(captured_at.date(), time.min)
+    day_end = day_start + timedelta(days=1)
+    existing = db.scalar(
+        select(ComplianceSnapshot).where(
+            ComplianceSnapshot.captured_at >= day_start,
+            ComplianceSnapshot.captured_at < day_end,
+        )
+    )
+    if existing is None:
+        db.add(ComplianceSnapshot(captured_at=captured_at, score=score))
+        db.commit()

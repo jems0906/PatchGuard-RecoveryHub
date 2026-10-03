@@ -43,6 +43,63 @@ def test_patch_create_and_ad_action_audit_log(client):
     assert invalid.status_code == 422
 
 
+def test_patch_lifecycle_requires_approval_and_records_installation(client):
+    patch = client.post("/api/patches", json={"title": "Security update", "asset_hostname": "APP01"})
+    patch_id = patch.json()["id"]
+    assert client.patch(f"/api/patches/{patch_id}", json={"installation_status": "downloading"}).status_code == 409
+    approved = client.patch(f"/api/patches/{patch_id}", json={"approval_status": "APPROVED"})
+    assert approved.status_code == 200
+    assert approved.json()["approval_status"] == "approved"
+    installed = client.patch(f"/api/patches/{patch_id}", json={"installation_status": "installed"})
+    assert installed.status_code == 200
+    assert installed.json()["installation_status"] == "installed"
+    assert client.patch(f"/api/patches/{patch_id}", json={"approval_status": "declined"}).status_code == 409
+    assert client.patch("/api/patches/9999", json={"approval_status": "approved"}).status_code == 404
+    assert client.patch(f"/api/patches/{patch_id}", json={"installation_status": "unknown"}).status_code == 422
+
+
+def test_ad_hygiene_metrics_and_audit_export(client):
+    from datetime import date, timedelta
+    from app.models import ADIssue
+
+    with client.app.state.testing_session() as db:
+        db.add_all([
+            ADIssue(issue_type="Disabled Account", username="former.user", account_enabled=False),
+            ADIssue(
+                issue_type="Password Expiry",
+                username="svc_reports",
+                is_service_account=True,
+                password_age_days=120,
+                password_expires_at=(date.today() + timedelta(days=5)).isoformat(),
+            ),
+        ])
+        db.commit()
+    health = client.get("/api/ad/health").json()
+    assert health["disabled_accounts"] == 1
+    assert health["passwords_expiring_within_7_days"] == 1
+    assert health["service_accounts_over_password_age"] == 1
+
+    report_response = client.get("/api/compliance/audit")
+    assert report_response.status_code == 200
+    assert "attachment; filename=" in report_response.headers["content-disposition"]
+    report = report_response.json()
+    assert report["report_type"] == "PatchGuard RecoveryHub compliance audit"
+    assert "active_directory_findings" in report["evidence"]
+
+
+def test_overview_captures_one_compliance_snapshot_per_day(client):
+    from app.models import ComplianceSnapshot
+    from sqlalchemy import select
+
+    client.get("/api/compliance/overview")
+    client.get("/api/compliance/overview")
+    with client.app.state.testing_session() as db:
+        snapshots = list(db.scalars(select(ComplianceSnapshot)))
+    assert len(snapshots) == 1
+    trend = client.get("/api/compliance/trend").json()
+    assert len(trend) == 1
+
+
 def test_csv_import_validates_and_persists_rows(client):
     response = client.post(
         "/api/imports?entity=assets",
@@ -51,6 +108,35 @@ def test_csv_import_validates_and_persists_rows(client):
     assert response.status_code == 200
     assert response.json()["imported"] == 1
     assert client.get("/api/assets").json()[0]["hostname"] == "SRV-01"
+
+
+def test_csv_import_persists_ad_hygiene_and_backup_policy_fields(client):
+    ad_report = (
+        "issue_type,username,account_enabled,is_service_account,password_last_set,"
+        "password_expires_at,password_age_days\n"
+        "Password Expiry,svc_api,true,true,2026-09-01,2026-10-05,34\n"
+    )
+    ad_response = client.post(
+        "/api/imports?entity=ad_issues",
+        files={"file": ("ad.csv", ad_report, "text/csv")},
+    )
+    assert ad_response.status_code == 200
+    ad_row = client.get("/api/ad/issues").json()[0]
+    assert ad_row["is_service_account"] is True
+    assert ad_row["password_age_days"] == 34
+
+    backup_report = (
+        "protected_system,job_name,schedule_cadence,retention_days\n"
+        "APP01,APP01-hourly,hourly,30\n"
+    )
+    backup_response = client.post(
+        "/api/imports?entity=backups",
+        files={"file": ("backup.csv", backup_report, "text/csv")},
+    )
+    assert backup_response.status_code == 200
+    backup_row = client.get("/api/backups").json()[0]
+    assert backup_row["schedule_cadence"] == "hourly"
+    assert backup_row["retention_days"] == 30
 
 
 def test_csv_import_rejects_unknown_entity_and_missing_required_field(client):

@@ -2,7 +2,7 @@
 
 ## Daily job and SLA review
 
-1. Review Rubrik job results by SLA domain (Gold/Silver/Bronze), protected system, last successful snapshot, next run, and error detail. Demo freshness thresholds are 2 hours for Gold, 26 hours for Silver, and 8 days for Bronze; set these to the actual contractual RPO/SLA before use.
+1. Review Rubrik job results by SLA domain (Gold/Silver/Bronze), protected system, schedule cadence, configured retention days, last successful snapshot, next run, and error detail. Demo freshness thresholds are 2 hours for Gold, 26 hours for Silver, and 8 days for Bronze; set these and each schedule/retention value to the actual contractual RPO/SLA before use.
 2. Investigate failed/partial jobs before the next recovery point objective is breached. Confirm cluster/connector health, capacity, credentials, and source-system availability.
 3. Check every protected system is associated with the correct SLA domain and retention policy. Escalate systems without a recent successful backup.
 

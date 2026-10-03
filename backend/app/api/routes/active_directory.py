@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import ADAction, ADIssue
+from app.reports.compliance_report import ad_hygiene_summary
 from app.schemas.active_directory import ADActionCreate
 
 router = APIRouter(prefix="/ad", tags=["active-directory"])
@@ -14,14 +15,11 @@ router = APIRouter(prefix="/ad", tags=["active-directory"])
 @router.get("/health")
 def ad_health(db: Session = Depends(get_db)) -> dict:
     issues = list(db.scalars(select(ADIssue)))
-    open_issues = [row for row in issues if row.status.lower() not in {"resolved", "healthy"}]
+    summary = ad_hygiene_summary(issues)
     return {
-        "status": "healthy" if not open_issues else "attention_required",
+        "status": "healthy" if not summary["open_issues"] else "attention_required",
         "total_checks": len(issues),
-        "open_issues": len(open_issues),
-        "replication_errors": sum(row.issue_type.lower() == "replication" for row in open_issues),
-        "locked_accounts": sum(row.issue_type.lower() == "locked account" for row in open_issues),
-        "stale_objects": sum(row.issue_type.lower() in {"stale computer", "stale object"} for row in open_issues),
+        **summary,
         "issues": [{column.name: getattr(row, column.name) for column in ADIssue.__table__.columns} for row in issues],
     }
 

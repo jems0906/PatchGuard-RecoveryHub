@@ -63,6 +63,7 @@ a { color: inherit; text-decoration: none; }
 .button-primary { background: #4ac79d; border-color: #4ac79d; color: #10241f; }
 .button-primary:hover:not(:disabled) { background: #6be1b8; }
 .button-small { padding: 6px 8px; white-space: nowrap; }
+.audit-export { margin-top: 12px; }
 .avatar { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid #465568; border-radius: 50%; background: #243244; color: #d8e4ee; font-size: 10px; font-weight: 700; }
 .page-content { max-width: 1500px; min-height: calc(100vh - 64px); margin: 0 auto; padding: 29px 34px 16px; display: flex; flex-direction: column; }
 .dashboard-grid { display: grid; gap: 18px; }
@@ -152,6 +153,7 @@ h1, h2 { font-family: "Segoe UI", sans-serif; }
 .toolbar h2 { font-size: 16px; }
 .count-pill { display: inline-grid; place-items: center; min-width: 22px; height: 20px; margin-left: 4px; padding: 0 5px; border-radius: 10px; background: #273749; color: #aebdcd; font: 600 10px "Segoe UI", sans-serif; vertical-align: 1px; }
 .table-scroll { width: 100%; overflow-x: auto; border-top: 1px solid #283544; }
+.table-scroll select { max-width: 130px; border: 1px solid #344356; border-radius: 5px; background: #111a25; color: #dce4ed; padding: 5px; font-size: 10px; }
 table { width: 100%; border-collapse: collapse; white-space: nowrap; text-align: left; }
 th { padding: 11px 13px; color: #8997a9; background: #171f2b; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
 td { max-width: 280px; padding: 12px 13px; border-top: 1px solid #222e3c; color: #aebac8; font-size: 10px; }

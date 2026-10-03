@@ -7,10 +7,11 @@ An infrastructure compliance dashboard for Windows server patch status, vulnerab
 ## Included
 
 - Weighted compliance overview, 30-day trend, patch compliance, overdue vulnerability and high-risk system indicators.
-- Server and VM inventory, WSUS-style deployment statuses, vulnerability lifecycle tracking, AD health findings, backup/SLA summaries, VM health alerts.
+- Server and VM inventory, approval-gated patch installation lifecycle, vulnerability registry/remediation evidence, structured AD account/password hygiene, backup cadence/retention metadata, SLA summaries, and VM health alerts.
+- Daily compliance snapshots plus an authenticated JSON audit-evidence export containing the current report summary, operational records, administrator-recorded AD actions, and available trend history.
 - CSV/JSON import for assets, patches, vulnerabilities, AD issues, VMs, and backups.
 - Optional single-admin username/password login with signed, HttpOnly 12-hour sessions; enabled for the Railway deployment.
-- Sample reports in [`data_samples/`](./data_samples), read-only optional PowerShell collectors in [`scripts/powershell/`](./scripts/powershell), and operational runbooks in [`docs/`](./docs).
+- Sample reports in [`data_samples/`](./data_samples), read-only optional PowerShell collectors in [`scripts/powershell/`](./scripts/powershell), collection/import guidance in [`scripts/README.md`](./scripts/README.md), and operational runbooks in [`docs/`](./docs).
 - FastAPI OpenAPI docs at `/docs`, pytest API/report tests, Dockerfiles, GitHub Actions, and Railway configuration.
 
 ## Run locally
@@ -84,8 +85,8 @@ This is a single shared administrator account, not a multi-user identity system.
 
 ## API outline
 
-`GET /api/health` is public for health checks. `/api/auth/session` reports login state; `POST /api/auth/login` and `POST /api/auth/logout` manage the administrator session. All other API routes and API documentation require an authenticated session when `AUTH_REQUIRED=true`. This includes `/api/compliance/overview`, `/api/compliance/trend`, `/api/assets`, `/api/patches`, `/api/patches/compliance`, `/api/vulnerabilities`, `/api/ad/health`, `/api/ad/issues`, `/api/ad/actions`, `/api/vms`, `/api/vms/alerts`, `/api/backups`, `/api/backups/sla`, and `/api/backups/readiness`. Create assets, patches, vulnerabilities, and AD action records with `POST`; update vulnerability status via `PATCH /api/vulnerabilities/{id}`; upload reports via `POST /api/imports?entity=<entity>`.
+`GET /api/health` is public for health checks. `/api/auth/session` reports login state; `POST /api/auth/login` and `POST /api/auth/logout` manage the administrator session. All other API routes and API documentation require an authenticated session when `AUTH_REQUIRED=true`. This includes `/api/compliance/overview`, `/api/compliance/trend`, `/api/compliance/audit`, `/api/assets`, `/api/patches`, `/api/patches/compliance`, `/api/vulnerabilities`, `/api/ad/health`, `/api/ad/issues`, `/api/ad/actions`, `/api/vms`, `/api/vms/alerts`, `/api/backups`, `/api/backups/sla`, and `/api/backups/readiness`. Patch approval and installation changes use `PATCH /api/patches/{id}`; installation progress is rejected until approved. Vulnerability status uses `PATCH /api/vulnerabilities/{id}`; reports upload via `POST /api/imports?entity=<entity>`.
 
 ## Scoring notes
 
-The overall score weights patching 35%, vulnerability remediation 30%, backup SLA status 25%, and AD hygiene 10%. A patch is counted for the patch rate when its classification is critical/security and its status is installed. Backup freshness uses demo windows of 2 hours for Gold, 26 hours for Silver, and 8 days for Bronze. An empty category is treated as 100% until records are imported. The demo AD hygiene indicator subtracts ten points per open issue (floored at zero); tune thresholds and scoring to your organization's approved compliance methodology before operational use.
+The overall score weights patching 35%, vulnerability remediation 30%, backup SLA status 25%, and AD hygiene 10%. A patch is counted for the patch rate when its classification is critical/security and its status is installed. Backup freshness uses demo windows of 2 hours for Gold, 26 hours for Silver, and 8 days for Bronze; backup records also carry schedule cadence and retention days as reported metadata. AD service-account password-age findings use `AD_SERVICE_ACCOUNT_PASSWORD_MAX_AGE_DAYS` (default 90), and imminent password expiry is reported for the next seven days. An authenticated overview request records one compliance snapshot per day. An empty category is treated as 100% until records are imported. The demo AD hygiene score subtracts ten points per open issue (floored at zero); tune thresholds and scoring to your organization's approved compliance methodology before operational use.

@@ -80,6 +80,11 @@ class ADIssue(Base):
     last_modified: Mapped[str] = mapped_column(String(40), default="")
     source: Mapped[str] = mapped_column(String(120), default="")
     details: Mapped[str] = mapped_column(Text, default="")
+    account_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_service_account: Mapped[bool] = mapped_column(Boolean, default=False)
+    password_last_set: Mapped[str] = mapped_column(String(40), default="")
+    password_expires_at: Mapped[str] = mapped_column(String(40), default="")
+    password_age_days: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class ADAction(Base):
@@ -127,6 +132,8 @@ class Backup(Base):
     last_successful_backup: Mapped[str] = mapped_column(String(40), default="")
     status: Mapped[str] = mapped_column(String(40), default="success")
     next_scheduled_backup: Mapped[str] = mapped_column(String(40), default="")
+    schedule_cadence: Mapped[str] = mapped_column(String(40), default="")
+    retention_days: Mapped[int] = mapped_column(Integer, default=0)
     restore_test_date: Mapped[str] = mapped_column(String(40), default="")
     restore_test_result: Mapped[str] = mapped_column(String(40), default="")
     tested_by: Mapped[str] = mapped_column(String(120), default="")

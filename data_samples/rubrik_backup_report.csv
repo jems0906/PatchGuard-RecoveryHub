@@ -1,5 +1,5 @@
-job_name,protected_system,backup_type,sla_domain,last_successful_backup,status,next_scheduled_backup,restore_test_date,restore_test_result,tested_by,error_details
-APP01-Daily,APP01,incremental,Gold,2026-10-02T12:00,success,2026-10-02T13:00,2026-09-14,passed,Jordan Lee,
-SQL01-Daily,SQL01,full,Gold,2026-09-30T12:00,failed,2026-10-02T13:00,2026-08-18,passed,Jordan Lee,Snapshot job exceeded the configured window.
-FILE01-Daily,FILE01,incremental,Silver,2026-10-02T10:00,success,2026-10-02T16:00,,,,
-WEB01-Weekly,WEB01,full,Bronze,2026-10-02T08:00,success,2026-10-08T08:00,2026-09-07,passed,Sam Patel,
+job_name,protected_system,backup_type,sla_domain,last_successful_backup,status,next_scheduled_backup,schedule_cadence,retention_days,restore_test_date,restore_test_result,tested_by,error_details
+APP01-Daily,APP01,incremental,Gold,2026-10-02T12:00,success,2026-10-02T13:00,hourly,30,2026-09-14,passed,Jordan Lee,
+SQL01-Daily,SQL01,full,Gold,2026-09-30T12:00,failed,2026-10-02T13:00,hourly,30,2026-08-18,passed,Jordan Lee,Snapshot job exceeded the configured window.
+FILE01-Daily,FILE01,incremental,Silver,2026-10-02T10:00,success,2026-10-02T16:00,daily,14,,,,
+WEB01-Weekly,WEB01,full,Bronze,2026-10-02T08:00,success,2026-10-08T08:00,weekly,7,2026-09-07,passed,Sam Patel,

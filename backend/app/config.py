@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     auth_admin_username: str = ""
     auth_admin_password: SecretStr = SecretStr("")
     auth_session_secret: SecretStr = SecretStr("")
+    ad_service_account_password_max_age_days: int = 90
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @field_validator("database_url", mode="before")

@@ -1,6 +1,6 @@
 import RecordsTable from "./RecordsTable.jsx";
 
-export default function PatchComplianceDashboard({ overview, patches }) {
+export default function PatchComplianceDashboard({ overview, patches, onPatchUpdate }) {
   const timeline = overview.patches.timeline || [];
   return (
     <div className="operations-page">
@@ -13,7 +13,7 @@ export default function PatchComplianceDashboard({ overview, patches }) {
         </div>
         <div className="timeline-list"><span className="timeline-title">Deployment timeline</span>{timeline.map((entry) => <div key={entry.deployment_date}><time>{entry.deployment_date}</time><span className="timeline-line" /><b>{entry.count} update{entry.count === 1 ? "" : "s"}</b></div>)}{!timeline.length && <p className="empty-note">No scheduled deployment dates.</p>}</div>
       </section>
-      <section className="panel table-panel"><RecordsTable type="patches" rows={patches} /></section>
+      <section className="panel table-panel"><RecordsTable type="patches" rows={patches} onPatchUpdate={onPatchUpdate} /></section>
     </div>
   );
 }

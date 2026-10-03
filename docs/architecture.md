@@ -8,7 +8,9 @@ PatchGuard RecoveryHub is a three-part sample application:
 
 ## Data flow
 
-WSUS-style, scanner, Active Directory, vCenter, and backup reports are exported by an operator and uploaded to `/api/imports`. The API parses and validates the report, then commits the batch transactionally. Dashboards calculate patching, vulnerability, backup, AD, VM, and weighted compliance indicators from the imported records. Synthetic demo rows are seeded on a fresh database by default.
+WSUS-style, scanner, Active Directory, vCenter, and backup reports are exported by an operator and uploaded to `/api/imports`. The API parses and validates the report, then commits the batch transactionally. Dashboards calculate patching, vulnerability, backup, AD, VM, and weighted compliance indicators from the imported records. Patch approval gates installation-state changes. AD evidence includes explicit enabled/service-account flags and password set/expiry/age values; backup evidence includes schedule cadence and retention days. Synthetic demo rows are seeded on a fresh database by default.
+
+The authenticated compliance overview records at most one score snapshot per calendar day, which supplies the 30-day trend. `/api/compliance/audit` exports a point-in-time JSON package with the summary, operational records, administrator-recorded AD actions, and available snapshots. This is an evidence export, not an immutable event ledger: it does not record every edit, actor, or before/after value. Review the deployment and retention warnings before using it as regulated audit evidence.
 
 ## Boundaries
 

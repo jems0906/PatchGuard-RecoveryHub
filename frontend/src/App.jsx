@@ -47,8 +47,9 @@ export default function App() {
     setLoading(true);
     setError("");
     try {
-      const [overview, trend, assets, patches, vulnerabilities, ad, adActions, vms, vmAlerts, backups, recoveryReadiness] = await Promise.all([
-        api.overview(), api.trend(), api.assets(), api.patches(), api.vulnerabilities(), api.adHealth(), api.adActions(), api.vms(), api.vmAlerts(), api.backups(), api.recoveryReadiness(),
+      const overview = await api.overview();
+      const [trend, assets, patches, vulnerabilities, ad, adActions, vms, vmAlerts, backups, recoveryReadiness] = await Promise.all([
+        api.trend(), api.assets(), api.patches(), api.vulnerabilities(), api.adHealth(), api.adActions(), api.vms(), api.vmAlerts(), api.backups(), api.recoveryReadiness(),
       ]);
       setData({ overview, trend, assets, patches, vulnerabilities, ad, adActions, vms, vmAlerts, backups, recoveryReadiness });
     } catch (loadError) {
@@ -77,6 +78,29 @@ export default function App() {
     try {
       await api.verifyVulnerability(id);
       setRefreshKey((key) => key + 1);
+    } catch (actionError) {
+      setError(actionError.message);
+    }
+  }
+
+  async function updatePatch(id, changes) {
+    try {
+      await api.updatePatch(id, changes);
+      setRefreshKey((key) => key + 1);
+    } catch (actionError) {
+      setError(actionError.message);
+    }
+  }
+
+  async function downloadAuditReport() {
+    try {
+      const report = await api.auditReport();
+      const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: "application/json" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `patchguard-compliance-audit-${report.generated_at.slice(0, 10)}.json`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (actionError) {
       setError(actionError.message);
     }
@@ -114,11 +138,11 @@ export default function App() {
         <div className="page-content">
           {error && <div className="error-banner" role="alert"><b>Unable to load project data:</b> {error} <button onClick={() => setRefreshKey((key) => key + 1)}>Retry</button></div>}
           {loading && !data.overview ? <div className="loading-state"><span className="spinner" /> Loading compliance data…</div> : !data.overview ? <section className="panel setup-panel"><h1>RecoveryHub API unavailable</h1><p>Start the backend service, then retry. The API should be reachable at the frontend origin or through the Vite proxy.</p><button className="button button-primary" onClick={() => setRefreshKey((key) => key + 1)}>Try again</button></section> : <>
-            {active === "overview" && <Home overview={data.overview} trend={data.trend} vmAlerts={data.vmAlerts} />}
+            {active === "overview" && <Home overview={data.overview} trend={data.trend} vmAlerts={data.vmAlerts} onExport={downloadAuditReport} />}
             {active === "assets" && <section className="panel table-panel"><AssetInventory assets={data.assets} /></section>}
-            {active === "patches" && <PatchComplianceDashboard overview={data.overview} patches={data.patches} />}
+            {active === "patches" && <PatchComplianceDashboard overview={data.overview} patches={data.patches} onPatchUpdate={updatePatch} />}
             {active === "vulnerabilities" && <VulnerabilityTracker overview={data.overview} vulnerabilities={data.vulnerabilities} onVerify={verifyVulnerability} />}
-            {active === "ad" && <div className="ad-page"><section className="panel table-panel"><div className="ad-summary"><span className={`health-indicator ${data.ad.status === "healthy" ? "" : "needs-attention"}`} />{data.ad.open_issues} open health findings · {data.ad.replication_errors} replication errors · {data.ad.locked_accounts} locked accounts · {data.ad.stale_objects} stale objects</div><RecordsTable type="ad" rows={data.ad.issues} /></section><ADActionLog actions={data.adActions} onRecorded={load} /></div>}
+            {active === "ad" && <div className="ad-page"><section className="panel table-panel"><div className="ad-summary"><span className={`health-indicator ${data.ad.status === "healthy" ? "" : "needs-attention"}`} />{data.ad.open_issues} open health findings · {data.ad.replication_errors} replication errors · {data.ad.locked_accounts} locked accounts · {data.ad.stale_objects} stale objects · {data.ad.disabled_accounts} disabled accounts · {data.ad.passwords_expiring_within_7_days} passwords expiring in 7 days · {data.ad.service_accounts_over_password_age} service accounts beyond {data.ad.service_account_password_max_age_days}-day age limit</div><RecordsTable type="ad" rows={data.ad.issues} /></section><ADActionLog actions={data.adActions} onRecorded={load} /></div>}
             {active === "vms" && <section className="panel table-panel"><div className="ad-summary"><span className="health-indicator needs-attention" />{data.vmAlerts.alert_count} health alerts across {data.vmAlerts.vms.length} virtual machine(s)</div><RecordsTable type="vms" rows={data.vms.map((vm) => ({ ...vm, health_alerts: data.vmAlerts.vms.find((item) => item.vm_name === vm.vm_name)?.alerts.join(", ") || "None" }))} /></section>}
             {active === "backups" && <section className="panel table-panel"><div className="backup-summary">{["Gold", "Silver", "Bronze"].map((tier) => <div key={tier}><span>{tier} SLA</span><b>{data.overview.backups.sla_compliance[tier]}%</b><small>on-time status</small></div>)}<div><span>Recovery readiness</span><b>{data.recoveryReadiness.average_score}%</b><small>SLA + restore test recency</small></div></div><RecordsTable type="backups" rows={data.backups.map((backup) => ({ ...backup, ...data.recoveryReadiness.systems.find((item) => item.protected_system === backup.protected_system) }))} /></section>}
             {active === "imports" && <section className="panel import-panel"><div className="panel-heading"><div><p className="eyebrow">INGEST REPORTS</p><h2>Import infrastructure data</h2></div></div><p className="import-intro">Upload exports from WSUS, vulnerability scanners, Active Directory checks, vCenter, or backup reporting. Column names should match the API field names shown in the sample CSVs.</p><DataImporter onImported={() => { setRefreshKey((key) => key + 1); return Promise.resolve(); }} /><div className="import-note"><b>Data handling</b><p>Uploads are validated and committed as a single batch. Existing records are retained; imported rows are appended.</p></div></section>}
